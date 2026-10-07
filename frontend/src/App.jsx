@@ -13,6 +13,18 @@ export default function App() {
 
   const totalPages = Math.ceil(total / 10);
 
+  // A new search or filter must start from page 1, otherwise a user on page 4
+  // who narrows the results sees an empty table and no pagination controls.
+  const handleQueryChange = (value) => {
+    setQuery(value);
+    setPage(1);
+  };
+
+  const handleStatusChange = (value) => {
+    setStatus(value);
+    setPage(1);
+  };
+
   return (
     <div className="app">
       <header className="app-header">
@@ -21,8 +33,8 @@ export default function App() {
       </header>
 
       <div className="controls">
-        <SearchBar value={query} onChange={setQuery} />
-        <StatusFilter value={status} onChange={setStatus} />
+        <SearchBar value={query} onChange={handleQueryChange} />
+        <StatusFilter value={status} onChange={handleStatusChange} />
       </div>
 
       <TaskTable tasks={tasks} loading={loading} error={error} />
