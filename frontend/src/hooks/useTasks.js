@@ -8,20 +8,33 @@ export function useTasks(query, status, page, pageSize) {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Each effect run owns one request. When the inputs change (or the component
+    // unmounts) the cleanup aborts it and marks it stale, so a slow, older response
+    // can never overwrite the results of a newer one.
+    const controller = new AbortController();
+    let ignore = false;
+
     setLoading(true);
     setError(null);
 
-    fetchTasks({ query, status, page, pageSize })
+    fetchTasks({ query, status, page, pageSize, signal: controller.signal })
       .then((data) => {
+        if (ignore) return;
         setTasks(data.items);
         setTotal(data.total);
       })
       .catch((err) => {
+        if (ignore || err.name === 'AbortError') return;
         setError(err.message);
       })
       .finally(() => {
-        setLoading(false);
+        if (!ignore) setLoading(false);
       });
+
+    return () => {
+      ignore = true;
+      controller.abort();
+    };
   }, [query, status, page, pageSize]);
 
   return { tasks, total, loading, error };
