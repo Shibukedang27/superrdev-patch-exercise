@@ -11,9 +11,12 @@ import java.util.List;
 public interface TaskRepository extends JpaRepository<Task, Long> {
 
     // Search tasks by term and optional status filter
-    @Query(value = "SELECT * FROM tasks WHERE archived = FALSE AND LOWER(title) LIKE :term "
-                 + "OR LOWER(description) LIKE :term AND (:status IS NULL OR status = :status) "
-                 + "ORDER BY created_at DESC",
+    // Note: the title/description OR must be parenthesised, otherwise AND binds tighter
+    // and archived tasks / other statuses leak in through the description match.
+    @Query(value = "SELECT * FROM tasks WHERE archived = FALSE "
+                 + "AND (LOWER(title) LIKE :term OR LOWER(description) LIKE :term) "
+                 + "AND (:status IS NULL OR status = :status) "
+                 + "ORDER BY created_at DESC, id DESC",
            nativeQuery = true)
     List<Task> searchTasks(@Param("term") String term, @Param("status") String status);
 }
